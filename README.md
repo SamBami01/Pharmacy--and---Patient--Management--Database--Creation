@@ -1,1 +1,1 @@
-# Pharmacy--and---Patient--Management--Database--Creation
+# Pharmacy-and-Patient-Management-Database-Creation
