@@ -13,6 +13,7 @@ This project is a relational database system for managing pharmacy operations, p
 - Medication inventory system.
 
 ## ER Diagram
+![ER DIAGRAM](https://github.com/user-attachments/assets/9c8d59f8-5969-490d-8a93-73f53e0256a6)
 
 ## Defining Relationships
 #### Drugstore to Drug
