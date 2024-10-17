@@ -1,0 +1,154 @@
+/* Pharmacy Patient Management Database */
+
+-- Create the database if it does not already exist
+CREATE DATABASE IF NOT EXISTS drugstorechain;
+
+-- Select the newly created database for use
+USE drugstorechain;
+
+-- Create the Drugstore table
+CREATE TABLE IF NOT EXISTS `Drugstore` (
+  `StoreID` INT AUTO_INCREMENT PRIMARY KEY, -- Unique identifier for each drugstore, auto-incremented
+  `StoreName` VARCHAR(100), -- Name of the drugstore
+  `Address` VARCHAR(255), -- Address of the drugstore
+  `PhoneNumber` VARCHAR(20) -- Contact number for the drugstore
+);
+INSERT INTO Drugstore (StoreName, Address, PhoneNumber) VALUES ('HealthMart', '123 Wellness Blvd', '555-1234');
+SELECT * FROM Drugstore;
+
+-- Create the Doctor table
+CREATE TABLE IF NOT EXISTS `Doctor` (
+  `DoctorID` INT AUTO_INCREMENT PRIMARY KEY, -- Unique identifier for each doctor, auto-incremented
+  `Name` VARCHAR(100), -- Name of the doctor
+  `Specialty` VARCHAR(100), -- Medical specialty of the doctor
+  `YearsOfExperience` INT -- Years of experience the doctor has
+);
+INSERT INTO Doctor (Name, Specialty, YearsOfExperience) VALUES ('Dr. Smith', 'Cardiology', 10);
+SELECT * FROM Doctor;
+
+
+-- Create the Patient table
+CREATE TABLE IF NOT EXISTS `Patient` (
+  `PatientID` INT AUTO_INCREMENT PRIMARY KEY, -- Unique identifier for each patient, auto-incremented
+  `Name` VARCHAR(100), -- Name of the patient
+  `Address` VARCHAR(255), -- Address of the patient
+  `Age` INT, -- Age of the patient
+  `PrimaryDoctorID` INT, -- Foreign key referring to the patient's primary doctor
+  FOREIGN KEY (`PrimaryDoctorID`) REFERENCES `Doctor` (`DoctorID`) -- Establishing foreign key relationship
+    ON DELETE NO ACTION -- Prevent deletion of a doctor if they are a primary doctor for a patient
+    ON UPDATE NO ACTION  -- Prevent updates that would change the doctor ID
+);
+INSERT INTO Patient (Name, Address, Age, PrimaryDoctorID) VALUES ('John Doe', '456 Patient St', 35, 1);
+SELECT * FROM Patient;
+
+-- Create the Drug table
+CREATE TABLE IF NOT EXISTS `Drug` (
+  `DrugID` INT AUTO_INCREMENT PRIMARY KEY, -- Unique identifier for each drug, auto-incremented
+  `TradeName` VARCHAR(100), -- Trade name of the drug
+  `Formula` TEXT -- Composition or formula of the drug
+);
+INSERT INTO Drug (TradeName, Formula) VALUES ('Aspirin', 'C9H8O4');
+SELECT * FROM Drug;
+
+-- Create the Pharmaceutical Company table
+CREATE TABLE IF NOT EXISTS `PharmaceuticalCompany` (
+  `CompanyID` INT AUTO_INCREMENT PRIMARY KEY, -- Unique identifier for each pharmaceutical company, auto-incremented
+  `Name` VARCHAR(100), -- Name of the pharmaceutical company
+  `PhoneNumber` VARCHAR(20) -- Contact number for the company
+);
+INSERT INTO PharmaceuticalCompany (Name, PhoneNumber) VALUES ('PharmaCorp', '555-5678');
+SELECT * FROM PharmaceuticalCompany;
+
+-- Create the Contract table
+CREATE TABLE IF NOT EXISTS `Contract` (
+  `ContractID` INT AUTO_INCREMENT PRIMARY KEY, -- Unique identifier for each contract, auto-incremented
+  `StartDate` DATE, -- Start date of the contract
+  `EndDate` DATE, -- End date of the contract
+  `Text` TEXT, -- Additional text or details about the contract
+  `PharmaceuticalCompanyID` INT, -- Foreign key referring to the pharmaceutical company involved in the contract
+  `DrugstoreID` INT, -- Foreign key referring to the drugstore involved in the contract
+  `Supervisor` VARCHAR(100), -- Name of the supervisor overseeing the contract
+  FOREIGN KEY (`PharmaceuticalCompanyID`) REFERENCES `PharmaceuticalCompany` (`CompanyID`) -- Establishing foreign key relationship
+    ON DELETE NO ACTION -- Prevent deletion of a company involved in a contract
+    ON UPDATE NO ACTION, -- Prevent updates that would change the company ID
+  FOREIGN KEY (`DrugstoreID`) REFERENCES `Drugstore` (`StoreID`) -- Establishing foreign key relationship
+    ON DELETE NO ACTION -- Prevent deletion of a drugstore involved in a contract
+    ON UPDATE NO ACTION -- Prevent updates that would change the drugstore ID
+);
+INSERT INTO Contract (StartDate, EndDate, Text, PharmaceuticalCompanyID, DrugstoreID, Supervisor) VALUES ('2022-01-01', '2023-01-01', 'Contract details...', 1, 1, 'Jane Doe');
+SELECT * FROM Contract;
+
+-- Create the Prescription table
+CREATE TABLE IF NOT EXISTS `Prescription` (
+  `PrescriptionID` INT AUTO_INCREMENT PRIMARY KEY, -- Unique identifier for each prescription, auto-incremented
+  `Date` DATE, -- Date the prescription was issued
+  `Quantity` INT, -- Quantity of the drug prescribed
+  `DoctorID` INT, -- Foreign key referring to the doctor who issued the prescription
+  `PatientID` INT, -- Foreign key referring to the patient who received the prescription
+  `DrugID` INT, -- Foreign key referring to the drug prescribed
+  FOREIGN KEY (`DoctorID`) REFERENCES `Doctor` (`DoctorID`) -- Establishing foreign key relationship
+    ON DELETE NO ACTION -- Prevent deletion of a doctor associated with a prescription
+    ON UPDATE NO ACTION, -- Prevent updates that would change the doctor ID
+  FOREIGN KEY (`PatientID`) REFERENCES `Patient` (`PatientID`) -- Establishing foreign key relationship
+    ON DELETE NO ACTION -- Prevent deletion of a patient associated with a prescription
+    ON UPDATE NO ACTION, -- Prevent updates that would change the patient ID
+  FOREIGN KEY (`DrugID`) REFERENCES `Drug` (`DrugID`) -- Establishing foreign key relationship
+    ON DELETE NO ACTION -- Prevent deletion of a drug associated with a prescription
+    ON UPDATE NO ACTION -- Prevent updates that would change the drug ID
+);
+INSERT INTO Prescription (Date, Quantity, DoctorID, PatientID, DrugID) VALUES ('2022-06-01', 30, 1, 1, 1);
+SELECT * FROM Prescription; 
+
+-- Create the DrugstoreSells table
+CREATE TABLE IF NOT EXISTS `DrugstoreSells` (
+  `DrugstoreID` INT, -- Foreign key referring to the drugstore selling the drug
+  `DrugID` INT, -- Foreign key referring to the drug being sold
+  `Price` DECIMAL(10, 2), -- Price of the drug at the drugstore
+  PRIMARY KEY (`DrugstoreID`, `DrugID`), -- Composite primary key to ensure uniqueness for each drugstore-drug combination
+  FOREIGN KEY (`DrugstoreID`) REFERENCES `Drugstore` (`StoreID`) -- Establishing foreign key relationship
+    ON DELETE NO ACTION -- Prevent deletion of a drugstore if there are sales recorded
+    ON UPDATE NO ACTION, -- Prevent updates that would change the drugstore ID
+  FOREIGN KEY (`DrugID`) REFERENCES `Drug` (`DrugID`) -- Establishing foreign key relationship
+    ON DELETE NO ACTION -- Prevent deletion of a drug if it is being sold
+    ON UPDATE NO ACTION -- Prevent updates that would change the drug ID
+);
+
+-- Create the PharmaceuticalCompanyMakes table
+CREATE TABLE IF NOT EXISTS `PharmaceuticalCompanyMakes` (
+  `CompanyID` INT, -- Foreign key referring to the pharmaceutical company
+  `DrugID` INT, -- Foreign key referring to the drug produced by the company
+  PRIMARY KEY (`CompanyID`, `DrugID`), -- Composite primary key to ensure uniqueness for each company-drug combination
+  FOREIGN KEY (`CompanyID`) REFERENCES `PharmaceuticalCompany` (`CompanyID`) -- Establishing foreign key relationship
+    ON DELETE NO ACTION -- Prevent deletion of a company if it makes drugs
+    ON UPDATE NO ACTION, -- Prevent updates that would change the company ID
+  FOREIGN KEY (`DrugID`) REFERENCES `Drug` (`DrugID`) -- Establishing foreign key relationship
+    ON DELETE NO ACTION -- Prevent deletion of a drug produced by a company
+    ON UPDATE NO ACTION -- Prevent updates that would change the drug ID
+);
+
+-- Create the DoctorPatient table
+CREATE TABLE IF NOT EXISTS `DoctorPatient` (
+  `DoctorID` INT NOT NULL, -- Foreign key referring to the doctor
+  `PatientID` INT NOT NULL, -- Foreign key referring to the patient
+  PRIMARY KEY (`DoctorID`, `PatientID`), -- Composite primary key to ensure uniqueness for each doctor-patient relationship
+  INDEX `PatientID_idx` (`PatientID` ASC), -- Index for faster searching by PatientID
+  CONSTRAINT `fk_Doctor` -- Name of the constraint for the foreign key relationship with Doctor
+    FOREIGN KEY (`DoctorID`)
+    REFERENCES `Doctor` (`DoctorID`) -- Establishing foreign key relationship
+    ON DELETE NO ACTION -- Prevent deletion of a doctor associated with a patient
+    ON UPDATE NO ACTION, -- Prevent updates that would change the doctor ID
+  CONSTRAINT `fk_Patient` -- Name of the constraint for the foreign key relationship with Patient
+    FOREIGN KEY (`PatientID`)
+    REFERENCES `Patient` (`PatientID`) -- Establishing foreign key relationship
+    ON DELETE NO ACTION -- Prevent deletion of a patient associated with a doctor
+    ON UPDATE NO ACTION -- Prevent updates that would change the patient ID
+);
+INSERT INTO DoctorPatient (DoctorID, PatientID) VALUES (1, 1);
+SELECT * FROM DoctorPatient;
+
+
+
+
+
+
+
